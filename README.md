@@ -58,13 +58,13 @@ Table + Visualization
 
 # Tech Stack
 
-Python
-Flask
-DuckDB
-Pandas
-Groq LLM
-Matplotlib
-HTML / Jinja Templates
+* Python
+* Flask
+* DuckDB
+* Pandas
+* Groq LLM
+* Matplotlib
+* HTML / Jinja Templates
 
 ---
 
@@ -134,10 +134,10 @@ http://127.0.0.1:5000
 
 # Example Queries
 
-Top 10 most ordered products
-Show departments
-Total number of orders
-Top products by order count
+* Top 10 most ordered products
+* Show departments
+* Total number of orders
+* Top products by order count
 
 ---
 
