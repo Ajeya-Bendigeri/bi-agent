@@ -52,6 +52,8 @@ Chart Generator
 Table + Visualization
 ```
 
+![alt text](images/Architecture%20Diagram.png)
+
 ---
 
 # Tech Stack
@@ -139,15 +141,22 @@ Top products by order count
 
 ---
 
-# Features
+# output
+1. SQL Query
 
-Natural Language to SQL conversion
-Fast analytics using DuckDB
-Interactive charts
-Simple web interface
+This screen allows users to enter their queries in plain English instead of writing SQL manually.
 
----
+![alt text](images/Query_Img.png)
 
-# Author
+2. Chat interface
 
-Ajeya Bendigeri
+This screen shows the user interaction interface where users can ask questions about the dataset in natural language.
+
+![alt text](images/Chat_Img.png)
+
+
+3. Query Result Table
+
+The table shows the data returned from DuckDB, allowing users to easily inspect the analytical results.
+
+![alt text](images/Table_Img.png)
