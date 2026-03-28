@@ -66,6 +66,15 @@ HTML / Jinja Templates
 
 ---
 
+
+# Dataset
+
+Download the Instacart dataset from:
+https://www.kaggle.com/datasets/psparks/instacart-market-basket-analysis
+
+
+After downloading, place the CSV files in the `data/` folder.
+
 # Installation
 
 Clone the repository
