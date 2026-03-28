@@ -1,0 +1,11 @@
+pandas
+duckdb
+pandas
+numpy
+flask
+matplotlib
+openai
+python-dotenv
+dotenv
+langchain
+groq

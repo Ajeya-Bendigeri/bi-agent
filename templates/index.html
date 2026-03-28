@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversational BI Agent</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #09090f;
+      --surface:   #0f0f1a;
+      --surface2:  #16162a;
+      --border:    #1e1e36;
+      --border2:   #2a2a4a;
+      --accent:    #5b6af0;
+      --accent2:   #8b5cf6;
+      --glow:      rgba(91,106,240,0.18);
+      --text:      #e8e8f0;
+      --text2:     #9090b8;
+      --text3:     #5a5a7a;
+      --success:   #22d3a5;
+      --error:     #f87171;
+      --mono:      'DM Mono', monospace;
+      --sans:      'Syne', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
+      animation: drift 14s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 520px; height: 520px; background: radial-gradient(circle, #3b4bcc 0%, transparent 70%); top: -120px; left: -120px; }
+    .orb-2 { width: 440px; height: 440px; background: radial-gradient(circle, #6b21a8 0%, transparent 70%); bottom: -100px; right: -100px; animation-delay: -7s; }
+    .orb-3 { width: 260px; height: 260px; background: radial-gradient(circle, #0ea5e9 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0.2; animation-delay: -3.5s; }
+
+    @keyframes drift { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(30px,20px) scale(1.06); } }
+
+    /* ── Layout ── */
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    /* ── Header ── */
+    .header { display: flex; flex-direction: column; gap: 10px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      background: rgba(91,106,240,.1);
+      border: 1px solid rgba(91,106,240,.25);
+      border-radius: 100px;
+      padding: 4px 14px;
+      width: fit-content;
+    }
+    .badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .header h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 30%, #8b9ff4 70%, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text3);
+    }
+
+    /* ── Query card ── */
+    .query-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.03), 0 24px 48px rgba(0,0,0,.5);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+    }
+
+    .query-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    .query-label-spacing {
+      margin-bottom: 10px;
+    }
+
+    .input-row { display: flex; gap: 12px; align-items: stretch; }
+
+    .input-wrap { flex: 1; position: relative; }
+    .input-wrap::before {
+      content: '›_';
+      font-family: var(--mono);
+      font-size: 15px;
+      color: var(--accent);
+      position: absolute;
+      left: 18px; top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .question-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 16px 20px 16px 54px;
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .question-input::placeholder { color: var(--text3); }
+    .question-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow), inset 0 0 20px rgba(91,106,240,.04);
+    }
+
+    .ask-btn {
+      padding: 16px 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 12px;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform .15s, box-shadow .15s, filter .15s;
+      box-shadow: 0 4px 20px rgba(91,106,240,.35);
+      position: relative;
+      overflow: hidden;
+    }
+    .ask-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.15), transparent);
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .ask-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(91,106,240,.5); filter: brightness(1.08); }
+    .ask-btn:hover::after { opacity: 1; }
+    .ask-btn:active { transform: translateY(0); }
+    .ask-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    /* ── Chips ── */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .chip {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--text2);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: border-color .18s, color .18s, background .18s;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(91,106,240,.08); }
+
+    /* ── Loading spinner ── */
+    .loading-bar {
+      display: none;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+      background-size: 200% 100%;
+      animation: shimmer 1.4s linear infinite;
+      border-radius: 2px;
+      margin-top: 12px;
+    }
+    .loading-bar.active { display: block; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ── Results section ── */
+    .results-section { animation: fadeUp .5s ease both; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .stat-card:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--glow); }
+    .stat-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); }
+    .stat-value { font-size: 22px; font-weight: 800; letter-spacing: -.02em; background: linear-gradient(135deg, #fff 30%, #8b9ff4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-value-ok { font-size: 15px; font-weight: 700; color: var(--success); -webkit-text-fill-color: var(--success); }
+    .stat-value-err { font-size: 15px; font-weight: 700; color: var(--error); -webkit-text-fill-color: var(--error); }
+
+    /* ── Result tabs ── */
+    .result-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 5px;
+      width: fit-content;
+    }
+    .tab-btn {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 7px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text3);
+      transition: background .15s, color .15s;
+    }
+    .tab-btn.active {
+      background: var(--surface2);
+      color: var(--accent);
+      border: 1px solid var(--border2);
+    }
+
+    /* ── Chart section ── */
+    .chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.4);
+    }
+    .chart-wrap img {
+      width: 100%;
+      border-radius: 8px;
+      display: block;
+    }
+    .chart-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text3);
+      margin-bottom: 16px;
+    }
+
+    /* ── Table section ── */
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .results-title { font-size: 13px; font-family: var(--mono); color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
+    .results-meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--success);
+      background: rgba(34,211,165,.08);
+      border: 1px solid rgba(34,211,165,.2);
+      border-radius: 100px;
+      padding: 3px 12px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid var(--border2);
+      box-shadow: 0 8px 40px rgba(0,0,0,.5);
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+
+    thead { background: var(--surface2); position: sticky; top: 0; z-index: 2; }
+    thead tr { border-bottom: 1px solid var(--border2); }
+
+    th {
+      padding: 14px 20px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--text3);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 13px 20px;
+      color: var(--text2);
+      font-family: var(--mono);
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(91,106,240,.05); color: var(--text); }
+    td:first-child { color: var(--text); font-weight: 500; }
+    td.num { color: var(--accent); text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── Error box ── */
+    .error-box {
+      background: rgba(248,113,113,.06);
+      border: 1px solid rgba(248,113,113,.25);
+      border-radius: 14px;
+      padding: 20px 24px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--error);
+      line-height: 1.6;
+    }
+    .error-box strong { display: block; margin-bottom: 6px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; opacity: .7; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 64px 20px;
+      color: var(--text3);
+      font-family: var(--mono);
+      font-size: 13px;
+      border: 1px dashed var(--border2);
+      border-radius: 16px;
+    }
+    .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: .4; }
+    .empty-hints { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px; }
+    .empty-hint { font-size: 11px; color: var(--text3); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+    .empty-hint:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Footer ── */
+    .footer { font-family: var(--mono); font-size: 11px; color: var(--text3); text-align: center; }
+
+    /* ── Hidden panel ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    @media (max-width: 600px) {
+      .input-row { flex-direction: column; }
+      .ask-btn { width: 100%; }
+      .shell { padding: 40px 16px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="shell">
+
+  <!-- ── Header ── -->
+  <div class="header">
+    <div class="badge">BI Agent · Live</div>
+    <h1>Ask anything about<br>your order data.</h1>
+    <p>// Plain-English questions → Results &amp; insights, instantly</p>
+  </div>
+
+  <!-- ── Query card ── -->
+  <div class="query-card">
+    <span class="query-label">Query</span>
+
+    <form method="POST" id="query-form">
+      <div class="input-row">
+        <div class="input-wrap">
+          <input
+            type="text"
+            name="question"
+            id="question-input"
+            class="question-input"
+            placeholder="e.g. Which departments have the highest reorder rate?"
+            autocomplete="off"
+            value="{{ request.form.get('question', '') }}"
+          >
+        </div>
+        <button type="submit" class="ask-btn" id="submit-btn">Run Query →</button>
+      </div>
+      <div class="loading-bar" id="loading-bar"></div>
+    </form>
+
+    <div>
+      <div class="query-label query-label-spacing">Try these</div>
+      <div class="chips">
+        <span class="chip" onclick="fillQ(this)">Top 10 most ordered products</span>
+        <span class="chip" onclick="fillQ(this)">How many total orders are there?</span>
+        <span class="chip" onclick="fillQ(this)">How many products are in each department?</span>
+        <span class="chip" onclick="fillQ(this)">Which aisles have the most products?</span>
+        <span class="chip" onclick="fillQ(this)">Top 5 departments by number of orders</span>
+        <span class="chip" onclick="fillQ(this)">Most reordered products</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Results ── -->
+  {% if result is not none %}
+
+    {% if result is string %}
+      <!-- Error returned from backend -->
+      <div class="results-section">
+        <div class="stats-bar">
+          <div class="stat-card">
+            <span class="stat-label">Status</span>
+            <span class="stat-value-err">Error</span>
+          </div>
+        </div>
+        <div class="error-box">
+          <strong>Query failed</strong>
+          {{ result }}
+        </div>
+      </div>
+
+    {% else %}
+      <!-- Valid DataFrame result -->
+      <div class="results-section">
+
+        <!-- Stats bar -->
+        <div class="stats-bar">
+          <div class="stat-card">
+            <span class="stat-label">Rows returned</span>
+            <span class="stat-value">{{ result | length }}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Columns</span>
+            <span class="stat-value">{{ result.columns | length }}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Status</span>
+            <span class="stat-value-ok">✓ OK</span>
+          </div>
+          {% if chart %}
+          <div class="stat-card">
+            <span class="stat-label">Visualization</span>
+            <span class="stat-value-ok">Chart ready</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- View toggle tabs — only show chart tab if chart exists -->
+        {% if chart %}
+        <div class="result-tabs">
+          <button class="tab-btn" id="tab-chart" onclick="showTab('chart')">Chart</button>
+          <button class="tab-btn active" id="tab-table" onclick="showTab('table')">Table</button>
+
+        </div>
+        {% endif %}
+
+        <!-- Chart panel -->
+        {% if chart %}
+        <div class="panel" id="panel-chart">
+          <div class="chart-wrap">
+            <div class="chart-title">Visualization · auto-generated from result set</div>
+            <img src="data:image/png;base64,{{ chart }}" alt="Query result chart">
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Table panel -->
+        <div class="panel active" id="panel-table">
+          <div class="results-header">
+            <span class="results-title">Result set</span>
+            <span class="results-meta">{{ result | length }} row{% if result | length != 1 %}s{% endif %}</span>
+          </div>
+          <div class="table-wrap">
+            {{ result.to_html(classes='', index=False, border=0) | safe }}
+          </div>
+        </div>
+
+      </div>
+    {% endif %}
+
+  {% else %}
+    <!-- Empty state -->
+    <div class="empty-state">
+      <div class="empty-icon">⬡</div>
+      No results yet — run a query above to see data here.
+      <div class="empty-hints">
+        <span class="empty-hint" onclick="fillQ(this)">Top 10 most ordered products</span>
+        <span class="empty-hint" onclick="fillQ(this)">How many total orders are there?</span>
+        <span class="empty-hint" onclick="fillQ(this)">Most reordered products</span>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="footer">Conversational BI Agent </div>
+
+</div>
+
+<script>
+  /* ── Fill query input from chip/hint ── */
+  function fillQ(el) {
+    document.getElementById('question-input').value = el.textContent.trim();
+    document.getElementById('question-input').focus();
+  }
+
+  /* ── Loading state on submit ── */
+  document.getElementById('query-form').addEventListener('submit', function() {
+    document.getElementById('loading-bar').classList.add('active');
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').textContent = 'Running…';
+  });
+
+  /* ── Tab switching ── */
+  function showTab(tab) {
+    ['chart', 'table'].forEach(function(t) {
+      var btn = document.getElementById('tab-' + t);
+      var panel = document.getElementById('panel-' + t);
+      if (btn) btn.classList.toggle('active', t === tab);
+      if (panel) panel.classList.toggle('active', t === tab);
+    });
+  }
+
+  /* ── Auto-detect numeric columns and right-align them ── */
+  document.querySelectorAll('table td').forEach(function(td) {
+    var raw = td.textContent.replace(/[$,%\s]/g, '').trim();
+    if (raw !== '' && !isNaN(raw)) {
+      td.classList.add('num');
+    }
+  });
+</script>
+</body>
+</html>
