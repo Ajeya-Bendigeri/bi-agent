@@ -14,6 +14,7 @@ def index():
 
     result = None
     chart = None
+    query = None
 
     if request.method == "POST":
 
@@ -28,7 +29,7 @@ def index():
         if not isinstance(result, str):
             chart = generate_chart(result)
 
-    return render_template("index.html", result=result, chart=chart)
+    return render_template("index.html", result=result, chart=chart, query = query)
 
 
 if __name__ == "__main__":

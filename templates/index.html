@@ -315,6 +315,23 @@
       color: var(--text3);
       margin-bottom: 16px;
     }
+    .sql-code {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent);
+      white-space: pre-wrap;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .sql-display {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent);
+      white-space: pre-wrap;
+      line-height: 1.7;
+      margin: 0;
+    }
 
     /* ── Table section ── */
     .results-header {
@@ -512,6 +529,7 @@
         {% if chart %}
         <div class="result-tabs">
           <button class="tab-btn" id="tab-chart" onclick="showTab('chart')">Chart</button>
+          <button class="tab-btn" id="tab-sql" onclick="showTab('sql')">SQL Query</button>
           <button class="tab-btn active" id="tab-table" onclick="showTab('table')">Table</button>
 
         </div>
@@ -523,6 +541,15 @@
           <div class="chart-wrap">
             <div class="chart-title">Visualization · auto-generated from result set</div>
             <img src="data:image/png;base64,{{ chart }}" alt="Query result chart">
+          </div>
+        </div>
+        {% endif %}
+        <!-- SQL panel -->
+        {% if query %}
+        <div class="panel" id="panel-sql">
+          <div class="chart-wrap">
+            <div class="chart-title">Generated SQL · auto-built from your question</div>
+            <pre class="sql-display">{{ query }}</pre>
           </div>
         </div>
         {% endif %}
@@ -574,7 +601,7 @@
 
   /* ── Tab switching ── */
   function showTab(tab) {
-    ['chart', 'table'].forEach(function(t) {
+    ['chart','sql','table'].forEach(function(t) {
       var btn = document.getElementById('tab-' + t);
       var panel = document.getElementById('panel-' + t);
       if (btn) btn.classList.toggle('active', t === tab);
