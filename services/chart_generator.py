@@ -13,7 +13,6 @@ def generate_chart(df):
     if df.shape[1] < 2:
         return None
 
-    # take first two columns
     x = df.iloc[:, 0]
     y = df.iloc[:, 1]
 

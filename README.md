@@ -142,7 +142,7 @@ http://127.0.0.1:5000
 ---
 
 # output
-1. SQL Query
+1. Query in Natural language
 
 This screen allows users to enter their queries in plain English instead of writing SQL manually.
 
@@ -160,3 +160,8 @@ This screen shows the user interaction interface where users can ask questions a
 The table shows the data returned from DuckDB, allowing users to easily inspect the analytical results.
 
 ![alt text](images/Table_Img.png)
+
+4. SQL Query for Ntural language
+The image shows the SQL Query which user asked  in plain English.
+
+![alt text](images/SQL_Image.png)
