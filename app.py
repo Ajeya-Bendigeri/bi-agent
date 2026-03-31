@@ -3,6 +3,7 @@ from services.database import load_data
 from services.query_generator import generate_query
 from services.utils import run_query
 from services.chart_generator import generate_chart
+import os 
 
 app = Flask(__name__)
 
@@ -33,4 +34,5 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
